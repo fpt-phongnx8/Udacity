@@ -134,12 +134,8 @@ def load_data(city, month, day):
     df['end_time'] = df['End Time'].dt.strftime('%X')
     
     if city in ('new york', 'chicago'):
-        df['Birth Year'] = pd.to_datetime(df['Birth Year'])
-        # we have also the coulmn of Birth year 
-        # df['Birth Year'] = pd.to_datetime(df['Birth Year'], format='%Y')
-        # this is not working for users stats 
-        # I have decided to handle this one as integer to get the min and max values
-        df['Birth Year'] = pd.to_numeric(df['Birth Year'],errors='coerce' , downcast='integer')
+        if 'Birth Year' in df.columns:
+            df['Birth Year'] = df['Birth Year'].fillna(0).astype(int)
 
     # filter by month if applicable
     if month != 'all':    
@@ -216,10 +212,10 @@ def handle_dates(df, city):
     if city in ('new york', 'chicago'):
         df['Birth Year'] = pd.to_datetime(df['Birth Year'])
         # we have also the coulmn of Birth year 
-        # df['Birth Year'] = pd.to_datetime(df['Birth Year'], format='%Y')
+        df['Birth Year'] = pd.to_datetime(df['Birth Year'], format='%Y')
         # this is not working for users stats 
         # I have decided to handle this one as integer to get the min and max values
-        df['Birth Year'] = pd.to_numeric(df['Birth Year'],errors='coerce' , downcast='integer')
+        # df['Birth Year'] = pd.to_numeric(df['Birth Year'],errors='coerce' , downcast='integer')
 
     # dropped them after I handeld them
     df.drop('Start Time', axis=1, inplace=True) 
@@ -331,20 +327,23 @@ def user_stats(df, city):
         print('Males:', df['Gender'].value_counts().get("Male", 0))
         print('Unknown:', df['Gender'].value_counts().get("Unknown", 0))
 
-        # So because I don't want to include the unknown value of these I will use a filter on the dataset 
-        #  earliest year of birth 
-        print('The earliest year of birth is: ', df['Birth Year'].min())
+        try:
+            # remove null and 0 value before caculate
+            valid_years = df['Birth Year'].dropna()
+            valid_years = valid_years[valid_years != 0]  # remove 0 value
+            
+            if len(valid_years) > 0:
+                earliest_year = int(valid_years.min())
+                most_recent_year = int(valid_years.max())
+                most_common_year = int(valid_years.mode()[0])
 
-        # Something doesn't add up here because it first displays to me the (unknown) so because I used it to fill the missing data
-        # I am thinking to impute the missing birth year with the mode of it 
-        # but this will effect the time since I already imputed why impute twice
-        # so what can I do ?
-
-        #  most recent of birth 
-        print('The most recent year of birth is: ', df['Birth Year'].max())
-
-        #  most common year of birth
-        print('The most common year of birth is: ', df['Birth Year'].mode()[0])
+                print(f"Display the earliest year of birth:\n{earliest_year}\n")
+                print(f"Display the most recent year of birth:\n{most_recent_year}\n") 
+                print(f"Display the most common year of birth:\n{most_common_year}\n")
+            else:
+                print(f"\nThere is no valid Birth Year info!\n")
+        except:
+            print(f"\nThere is no Birth Year info for this city!\n")
 
 
     print("\nThis took %s seconds." % (time.time() - start_time))
