@@ -38,7 +38,7 @@ Finally, you need to create two Glue Studio jobs that do the following tasks:
 
 Refer to the relationship diagram below to understand the desired state.
 
-<img src="./img/dataset.jpeg"/>
+<img src="./images/dataset.jpeg"/>
 
 A diagram displaying the relationship between entities.
 
